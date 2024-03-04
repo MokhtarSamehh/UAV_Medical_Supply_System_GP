@@ -1,5 +1,6 @@
 import numpy as np
-
+# distance_matrix = pd.read_csv('result.csv').values.tolist()
+# points = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
 inf = float('inf')
 distance_matrix = np.array([
      [0, 6, inf, 1, inf],
@@ -50,4 +51,5 @@ while P != start_point:
 shortest_route = route[::-1]
 shortest_route.append(end_point)
 print(shortest_route)
+print(shortest_distance[points.index(end_point)])
 
