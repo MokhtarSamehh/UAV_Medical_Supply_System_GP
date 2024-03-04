@@ -1,36 +1,45 @@
 import numpy as np
-# distance_matrix = pd.read_csv('result.csv').values.tolist()
-# points = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
+import pandas as pd
+distance_matrix = pd.read_csv('result.csv').values.tolist()
+points = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
+distance_matrix = distance_matrix[1:]
+points = [i for i in range(0, len(distance_matrix))]
+print(distance_matrix)
+print(len(distance_matrix))
 inf = float('inf')
-distance_matrix = np.array([
-     [0, 6, inf, 1, inf],
-     [6, 0,   5, 2,  2 ],
-     [inf, 5, 0, inf, 5],
-     [1, 2, inf,   0, 1],
-     [inf, 2, 5,   1, 0]
-  ])
-points = ['A', 'B', 'C', 'D', 'E']
-unvisited = ['A', 'B', 'C', 'D', 'E']
-unvisited_index = np.arange(0,5)
+# distance_matrix = np.array([
+#      [0, 6, inf, 1, inf],
+#      [6, 0,   5, 2,  2 ],
+#      [inf, 5, 0, inf, 5],
+#      [1, 2, inf,   0, 1],
+#      [inf, 2, 5,   1, 0]
+#   ])
+# points = ['A', 'B', 'C', 'D', 'E']
+unvisited = points
+unvisited_index = np.arange(0,len(points))
 visited = []
-shortest_distance = np.array([0, inf, inf, inf, inf])
-previous_vertex = np.repeat('' ,len(points))
+
+lst = [0] + [np.inf for i in range(len(points)-1)]
+shortest_distance = np.array(lst)
+previous_vertex = np.empty_like(points, dtype=object)
+# print(previous_vertex)
 k = 0
 # print(shortest_distance)
 # print(previous_vertex)
 # print(len(distance_matrix))
+print(unvisited)
 for i in range(len(distance_matrix)):
     for j in unvisited_index:
         if shortest_distance[j] > distance_matrix[k][j] + shortest_distance[k]:
             shortest_distance[j] = distance_matrix[k][j] + shortest_distance[k]
             previous_vertex[j] = points[k] 
-            print(previous_vertex)
-            print(shortest_distance)
+            #print(previous_vertex)
+            #print(shortest_distance)
     unvisited.remove(points[k])
     unvisited_index = unvisited_index[unvisited_index != k]
-    print(unvisited_index)
+    #print(unvisited_index)
     visited.append(points[k])
-    print(visited)
+    #print(visited)
     if len(visited) == len(points):
         break
     # print(shortest_distance[unvisited_index])
