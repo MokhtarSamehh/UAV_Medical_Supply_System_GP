@@ -1,4 +1,4 @@
-import pandas as pd
+import folium, pandas as pd
 from math import radians, sin, cos, sqrt, atan2
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -20,18 +20,32 @@ def haversine(lat1, lon1, lat2, lon2):
 
     return distance
 
-# Example usage
-# lat1, lon1 = 37.7749, -122.4194  # San Francisco, CA
-# lat2, lon2 = 34.0522, -118.2437  # Los Angeles, CA
 lat = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='H', skiprows=[0])
 lon = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='J', skiprows=[0])
+latlist = lat.values.tolist()
+lonlist = lon.values.tolist()
+# print(latlist)
+
 distmat = []
-for i in lat:
-    lat1 = lat[i]
-    lon1 = lon[i]
-    for j in lon:
-        lat2 = lat[j]
-        lon2 = lon[j]
-        distmat[i][j] = haversine(lat1, lon1, lat2, lon2)
+
+for index in range(len(latlist)):
+    lat1 = latlist[index][0]
+    lon1 = lonlist[index][0]
+    row = []
+
+    for index2 in range(len(latlist)):
+        lat2 = latlist[index2][0]
+        lon2 = lonlist[index2][0]
+
+        distance = haversine(lat1, lon1, lat2, lon2)
+
+        row.append(distance)
+
+    distmat.append(row)
+
+
 
 print(distmat)
+exportdistmat = pd.DataFrame(distmat)
+exportdistmat.to_csv("result.csv", index=False)
+
