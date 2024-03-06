@@ -13,6 +13,12 @@ distance_matrix = np.array([
      [1, 2, inf,   0, 1],
      [inf, 2, 5,   1, 0]
   ])
+# points = [i for i in range(0, len(distance_matrix))]
+# start_point = input('Enter Start Point:')
+# distance_row = distance_matrix [int(start_point)]
+# distance_matrix = np.delete(distance_matrix, int(start_point), axis=0)
+# distance_matrix_new = np.vstack((distance_row ,distance_matrix))
+# print(start_point, distance_matrix_new)
 pts = ['A', 'B', 'C', 'D', 'E']
 points = ['A', 'B', 'C', 'D', 'E']
 unvisited = points
@@ -22,7 +28,6 @@ lst = [0] + [np.inf for i in range(len(points)-1)]
 shortest_distance = np.array(lst)
 previous_vertex = np.empty_like(points, dtype=object)
 k = 0
-
 for i in range(len(distance_matrix)):
     for j in unvisited_index:
         if shortest_distance[j] > distance_matrix[k][j] + shortest_distance[k]:
@@ -31,10 +36,12 @@ for i in range(len(distance_matrix)):
     unvisited.remove(pts[k])
     unvisited_index = unvisited_index[unvisited_index != k]
     visited.append(pts[k])
+    print(shortest_distance)
     if len(visited) == len(pts):
         break
     k = unvisited_index[np.argmin(shortest_distance[unvisited_index])]
 
+print(previous_vertex, shortest_distance)
 end_point = input('Enter the End Point:')
 start_point = input('Enter Start Point:')
 P = end_point
