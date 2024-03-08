@@ -1,6 +1,7 @@
 import folium, pandas as pd
 from math import radians, sin, cos, sqrt, atan2
-
+import numpy as np
+import pandas as pd
 
 map_center = [27.165862605978425, 31.164374416309347]
 
@@ -14,7 +15,7 @@ restircted_coordinates = [(29.409974444139348, 27.15493376332929 ),
                           (27.842808013450828, 29.7114444577256), 
                           (29.3604724221642, 29.69521264379293)]
 
-x_range = [29.409974444139348, 27.74947541281428, 27.842808013450828, 29.3604724221642]
+
 
 def haversine(lat1, lon1, lat2, lon2):
     # Convert latitude and longitude from degrees to radians
@@ -80,6 +81,60 @@ for i in range(len(comb_coord)):
 
 print(dist_mat)
 
+def dijkastra(distance_matrix, start_point, end_point, points):
+    lstpoint = points[int(start_point)]
+    points.remove(points[int(start_point)])
+    points = [lstpoint] + points
+    pts = [i for i in range(0, len(distance_matrix))]
+    N = len(pts)
+    inf = float('inf')
+    unvisited = pts
+    visited = []
+    lst = [0] + [np.inf for i in range(N-1)]
+    shortest_distance = np.array(lst)
+    previous_vertex = np.empty_like(pts, dtype=object)
+    k = 0
+    for i in range(N):
+        for j in unvisited:
+            if shortest_distance[j] > distance_matrix[k][j] + shortest_distance[k]:
+                shortest_distance[j] = distance_matrix[k][j] + shortest_distance[k]
+                previous_vertex[j] = k
+        unvisited.remove(k)
+        visited.append(k)
+        if len(visited) == N:
+            break
+   
+        k = unvisited[np.argmin(shortest_distance[unvisited])]
+    
+    P = end_point
+    route = []
+    while P != 0:
+        print(previous_vertex)
+        P = previous_vertex[int(P)]
+        route.append(P)
+    
+    shortest_route = route[::-1]
+    shortest_route.append(end_point)
+    shortest_dist = shortest_distance[int(end_point)]
+
+    return shortest_dist, shortest_route
+
+shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
+
+print(shortest_distance, shortest_route)
+equation_hub = []
+
+for coord in shortest_route:
+    equation_hub.append(comb_coord[coord])
+
+print(equation_hub)
+
+equation_hub = equation_of_line(equation_hub)
+
+print(equation_hub)
+
+x_range = [29.409974444139348, 27.74947541281428, 27.842808013450828, 29.3604724221642]
+
 my_map_res = folium.Map(location=map_center, zoom_start=6)
 
 
@@ -106,7 +161,7 @@ for eq in equation_hub:
         print(x_intersect, y_intersect, i)
         if i != len(x_range)-1:
             if (x_intersect >= x_range[i] and x_intersect <= x_range[i+1]) or (x_intersect <= x_range[i] and x_intersect >= x_range[i+1]):
-                dist_mat[equation_hub.index(eq)][len(equation_hub) + equation_res.index(res)] = inf
+                dist_mat[equation_hub.index(eq)][len(equation_hub) + equation_res.index(res)] = inf  #index need revision
                 dist_mat[len(equation_hub) + equation_res.index(res)][equation_hub.index(eq)] = inf
                 c += 1
         else:
@@ -116,7 +171,9 @@ for eq in equation_hub:
                 c += 1
         i += 1
 
+
 print(dist_mat)
+
 i = 1
 for coord in int_coord:
      folium.Marker(location=coord, popup=f"Res{i}").add_to(my_map_res)
