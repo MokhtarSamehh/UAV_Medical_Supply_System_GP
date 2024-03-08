@@ -128,6 +128,9 @@ x_range = [29.409974444139348, 27.74947541281428, 27.842808013450828, 29.3604724
 
 enlarged_shape = enlarge_shape_at_centroid(restircted_coordinates, 1.1)
 polygon_coordinates = list(enlarged_shape.exterior.coords)
+polygon_coordinates.pop()
+
+
 
 equation_res = equation_of_line(restircted_coordinates)
 equation_hub = equation_of_line(hubs)
