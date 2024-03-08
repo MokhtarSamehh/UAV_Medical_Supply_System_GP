@@ -2,18 +2,8 @@ import folium, pandas as pd
 from math import radians, sin, cos, sqrt, atan2
 import numpy as np
 import pandas as pd
-
-map_center = [27.165862605978425, 31.164374416309347]
-
-hubs = [(30.08635694111855, 26.11838449777327),
-        (27.024200593372797, 28.037788768125484),
-        (27.66189028663055, 30.651920298481837),
-        (30.00279539433303, 28.46819886036796)]
-
-restircted_coordinates = [(29.409974444139348, 27.15493376332929 ), 
-                          (27.74947541281428, 27.041311065800567), 
-                          (27.842808013450828, 29.7114444577256), 
-                          (29.3604724221642, 29.69521264379293)]
+from shapely.geometry import Polygon
+from shapely.affinity import translate, scale
 
 
 
@@ -36,9 +26,28 @@ def haversine(lat1, lon1, lat2, lon2):
 
     return distance
 
+
+def enlarge_shape_at_centroid(coordinates, scale_factor):
+    # Create a shapely Polygon from the coordinates
+    original_shape = Polygon(coordinates)
+
+    # Calculate the centroid
+    centroid = original_shape.centroid
+
+    # Translate the shape to have its centroid at the origin
+    translated_shape = translate(original_shape, -centroid.x, -centroid.y)
+
+    # Scale the translated shape
+    scaled_shape = scale(translated_shape, xfact=scale_factor, yfact=scale_factor)
+
+    # Translate the scaled shape back to its original position
+    enlarged_shape = translate(scaled_shape, centroid.x, centroid.y)
+
+    return enlarged_shape
+
 def equation_of_line(coords):
     equation = []
-    for i in range(len(coords)):
+    for i in range(len(coords)-1):
         if i != len(coords)-1:
             x1, y1 = coords[i]
             x2, y2 = coords[i + 1]
@@ -63,23 +72,6 @@ def find_intersection(m1, b1, m2, b2):
     y_intersect = m1 * x_intersect + b1
 
     return x_intersect, y_intersect
-
-
-equation_res = equation_of_line(restircted_coordinates)
-equation_hub = equation_of_line(hubs)
-row = []
-dist_mat = []
-comb_coord  = hubs + restircted_coordinates
-for i in range(len(comb_coord)):
-    lat1, lon1 = comb_coord[i]
-    for j in range(len(comb_coord)):
-        lat2, lon2 = comb_coord[j]
-        row.append(haversine(lat1, lon1, lat2, lon2))
-    
-    dist_mat.append(row)
-    row =[]
-
-print(dist_mat)
 
 def dijkastra(distance_matrix, start_point, end_point, points):
     lstpoint = points[int(start_point)]
@@ -119,66 +111,143 @@ def dijkastra(distance_matrix, start_point, end_point, points):
 
     return shortest_dist, shortest_route
 
-shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
 
-print(shortest_distance, shortest_route)
-equation_hub = []
+map_center = [27.165862605978425, 31.164374416309347]
 
-for coord in shortest_route:
-    equation_hub.append(comb_coord[coord])
+hubs = [(30.08635694111855, 26.11838449777327),
+        (27.024200593372797, 28.037788768125484),
+        (27.66189028663055, 30.651920298481837),
+        (30.00279539433303, 28.46819886036796)]
 
-print(equation_hub)
-
-equation_hub = equation_of_line(equation_hub)
-
-print(equation_hub)
+restircted_coordinates = [(29.409974444139348, 27.15493376332929 ), 
+                          (27.74947541281428, 27.041311065800567), 
+                          (27.842808013450828, 29.7114444577256), 
+                          (29.3604724221642, 29.69521264379293)]
 
 x_range = [29.409974444139348, 27.74947541281428, 27.842808013450828, 29.3604724221642]
+
+enlarged_shape = enlarge_shape_at_centroid(restircted_coordinates, 1.1)
+polygon_coordinates = list(enlarged_shape.exterior.coords)
+
+equation_res = equation_of_line(restircted_coordinates)
+equation_hub = equation_of_line(hubs)
+row = []
+dist_mat = []
+comb_coord  = hubs + polygon_coordinates + restircted_coordinates
+for i in range(len(comb_coord)):
+    lat1, lon1 = comb_coord[i]
+    for j in range(len(comb_coord)):
+        lat2, lon2 = comb_coord[j]
+        row.append(haversine(lat1, lon1, lat2, lon2))
+    
+    dist_mat.append(row)
+    row =[]
+
+print(dist_mat)
+
+
+
+
 
 my_map_res = folium.Map(location=map_center, zoom_start=6)
 
 
-for coord in hubs:
-     folium.Marker(location=coord, popup='Point').add_to(my_map_res)
+# for coord in hubs:
+#      folium.Marker(location=coord, popup='Point').add_to(my_map_res)
 
-for coord in restircted_coordinates:
-     folium.Marker(location=coord, popup='Point').add_to(my_map_res)
+# for coord in restircted_coordinates:
+#      folium.Marker(location=coord, popup='Point').add_to(my_map_res)
 
-folium.PolyLine(locations = restircted_coordinates + [restircted_coordinates[0]], color='red').add_to(my_map_res)
+# folium.PolyLine(locations = restircted_coordinates + [restircted_coordinates[0]], color='red').add_to(my_map_res)
 
-my_map_res.save("test_map_with_restricted_areas.html")
+# my_map_res.save("test_map_with_restricted_areas.html")
 
 inf = float('inf')
 int_coord = []
 c = 0
-for eq in equation_hub:
-    m1, b1 = eq
-    i = 0
-    for res in equation_res:
-        m2, b2 = res
-        x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
-        int_coord.append((x_intersect, y_intersect))
-        print(x_intersect, y_intersect, i)
-        if i != len(x_range)-1:
-            if (x_intersect >= x_range[i] and x_intersect <= x_range[i+1]) or (x_intersect <= x_range[i] and x_intersect >= x_range[i+1]):
-                dist_mat[equation_hub.index(eq)][len(equation_hub) + equation_res.index(res)] = inf  #index need revision
-                dist_mat[len(equation_hub) + equation_res.index(res)][equation_hub.index(eq)] = inf
-                c += 1
-        else:
-            if (x_intersect >= x_range[i] and x_intersect <= x_range[0]) or (x_intersect <= x_range[i] and x_intersect >= x_range[0]):
-                dist_mat[equation_hub.index(eq)][len(equation_hub) + equation_res.index(res)] = inf
-                dist_mat[len(equation_hub) + equation_res.index(res)][equation_hub.index(eq)] = inf
-                c += 1
+k = 0
+N = 1
+while k != N:
+    shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
+
+    print(shortest_distance, shortest_route)
+    equation_hub = []
+
+    for coord in shortest_route:
+        equation_hub.append(comb_coord[coord])
+
+    print(range(len(equation_hub)))
+
+    equation_hub = equation_of_line(equation_hub)
+
+    print(equation_hub)
+
+    k = 0
+    N = 0
+
+    for eq in equation_hub:
+        m1, b1 = eq
+        i = 0
+        for res in equation_res:
+            m2, b2 = res
+            x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
+            int_coord.append((x_intersect, y_intersect))
+            N += 1
+            print(x_intersect, y_intersect, i, N, k)
+            if i != len(x_range)-1:
+                if (x_intersect > x_range[i] and x_intersect < x_range[i+1]) or (x_intersect < x_range[i] and x_intersect > x_range[i+1]):
+                    dist_mat[shortest_route[i]][shortest_route[i+1]] = inf  
+                    dist_mat[shortest_route[i+1]][shortest_route[i]] = inf
+                    c += 1
+                else:
+                    k += 1
+            else:
+                if (x_intersect > x_range[i] and x_intersect < x_range[0]) or (x_intersect < x_range[i] and x_intersect > x_range[0]):
+                    dist_mat[shortest_route[i]][shortest_route[i+1]] = inf  
+                    dist_mat[shortest_route[i+1]][shortest_route[i]] = inf
+                    c += 1
+                else:
+                    k += 1
         i += 1
 
+    print(dist_mat, c)
 
-print(dist_mat)
+shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
 
-i = 1
-for coord in int_coord:
-     folium.Marker(location=coord, popup=f"Res{i}").add_to(my_map_res)
-     i += 1
+print(shortest_distance, shortest_route)
+# c = 0
+# for eq in equation_hub:
+#     m1, b1 = eq
+#     i = 0
+#     for res in equation_res:
+#         m2, b2 = res
+#         x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
+#         int_coord.append((x_intersect, y_intersect))
+#         print(x_intersect, y_intersect, i, c)
+#         if i != len(x_range)-1:
+#             if (x_intersect > x_range[i] and x_intersect < x_range[i+1]) or (x_intersect < x_range[i] and x_intersect > x_range[i+1]):
+#                 dist_mat[shortest_route1[i]][shortest_route1[i+1]] = inf  #index need revision
+#                 dist_mat[shortest_route1[i+1]][shortest_route1[i]] = inf
+#                 c += 1
+#         else:
+#             if (x_intersect > x_range[i] and x_intersect < x_range[0]) or (x_intersect < x_range[i] and x_intersect > x_range[0]):
+#                 dist_mat[shortest_route1[i]][shortest_route1[i+1]] = inf  #index need revision
+#                 dist_mat[shortest_route1[i+1]][shortest_route1[i]] = inf
+#                 c += 1
+#     i += 1
 
-my_map_res.save("test_map_with_restricted_areas.html")
 
-print(c)
+# print(dist_mat)
+
+# shortest_distance1, shortest_route1 = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
+
+# print(shortest_distance1, shortest_route1)
+
+# i = 1
+# for coord in int_coord:
+#      folium.Marker(location=coord, popup=f"Res{i}").add_to(my_map_res)
+#      i += 1
+
+# my_map_res.save("test_map_with_restricted_areas.html")
+
+# print(c)
