@@ -66,10 +66,14 @@ def equation_of_line(coords):
 
 def find_intersection(m1, b1, m2, b2):
     # Calculate x coordinate of the intersection
-    x_intersect = (b2 - b1) / (m1 - m2)
+    if m1 == m2: # if two lines are parallel or colinear
+        x_intersect = 0
+        y_intersect = 0
+    else:
+        x_intersect = (b2 - b1) / (m1 - m2)
 
-    # Calculate y coordinate using either equation
-    y_intersect = m1 * x_intersect + b1
+        # Calculate y coordinate using either equation
+        y_intersect = m1 * x_intersect + b1
 
     return x_intersect, y_intersect
 
@@ -108,7 +112,7 @@ def dijkastra(distance_matrix, start_point, end_point, points):
     shortest_route = route[::-1]
     shortest_route.append(end_point)
     shortest_dist = shortest_distance[int(end_point)]
-
+    print(shortest_dist, shortest_route)
     return shortest_dist, shortest_route
 
 
@@ -130,6 +134,12 @@ enlarged_shape = enlarge_shape_at_centroid(restircted_coordinates, 1.1)
 polygon_coordinates = list(enlarged_shape.exterior.coords)
 polygon_coordinates.pop()
 
+start = 1
+end = 3
+lstpoint = hubs[int(start)]
+hubs.remove(hubs[int(start)])
+hubs = [lstpoint] + hubs
+print(hubs)
 
 
 equation_res = equation_of_line(restircted_coordinates)
@@ -165,13 +175,18 @@ my_map_res = folium.Map(location=map_center, zoom_start=6)
 
 # my_map_res.save("test_map_with_restricted_areas.html")
 
+
+
+
 inf = float('inf')
 int_coord = []
 c = 0
 k = 0
 N = 1
+d = 0
+j = 0
 while k != N:
-    shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
+    shortest_distance, shortest_route = dijkastra(dist_mat, start, end, ['A', 'B', 'C', 'D'])
 
     print(shortest_distance, shortest_route)
     equation_hub = []
@@ -187,37 +202,66 @@ while k != N:
 
     k = 0
     N = 0
-
+    i = 0
     for eq in equation_hub:
         m1, b1 = eq
-        i = 0
+        j = 0
         for res in equation_res:
             m2, b2 = res
             x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
             int_coord.append((x_intersect, y_intersect))
             N += 1
-            print(x_intersect, y_intersect, i, N, k)
             if i != len(x_range)-1:
-                if (x_intersect > x_range[i] and x_intersect < x_range[i+1]) or (x_intersect < x_range[i] and x_intersect > x_range[i+1]):
+                if (x_intersect > x_range[j] and x_intersect < x_range[j+1]) or (x_intersect < x_range[j] and x_intersect > x_range[j+1]):
                     dist_mat[shortest_route[i]][shortest_route[i+1]] = inf  
                     dist_mat[shortest_route[i+1]][shortest_route[i]] = inf
                     c += 1
+                    break    
                 else:
                     k += 1
             else:
-                if (x_intersect > x_range[i] and x_intersect < x_range[0]) or (x_intersect < x_range[i] and x_intersect > x_range[0]):
+                if (x_intersect > x_range[j] and x_intersect < x_range[0]) or (x_intersect < x_range[j] and x_intersect > x_range[0]):
                     dist_mat[shortest_route[i]][shortest_route[i+1]] = inf  
                     dist_mat[shortest_route[i+1]][shortest_route[i]] = inf
-                    c += 1
+                    d += 1
+                    break
+                    
                 else:
                     k += 1
+            print(x_intersect, y_intersect, i, j, N, k,c,d)
+            j += 1       
         i += 1
 
     print(dist_mat, c)
 
-shortest_distance, shortest_route = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
+shortest_distance, shortest_route = dijkastra(dist_mat, start, end, ['A', 'B', 'C', 'D'])
 
 print(shortest_distance, shortest_route)
+
+route_coordinates = []
+
+for i in shortest_route:
+    route_coordinates.append(comb_coord[i])
+
+print(route_coordinates)
+
+my_map_res = folium.Map(location=map_center, zoom_start=6)
+
+
+for coord in comb_coord:
+     folium.Marker(location=coord, popup='Point').add_to(my_map_res)
+
+# for coord in restircted_coordinates:
+#      folium.Marker(location=coord, popup='Point').add_to(my_map_res)
+
+folium.PolyLine(locations = restircted_coordinates + [restircted_coordinates[0]], color='red').add_to(my_map_res)
+
+folium.PolyLine(locations=route_coordinates, color='blue').add_to(my_map_res)
+
+my_map_res.save("test_map_with_restricted_areas.html")
+
+
+
 # c = 0
 # for eq in equation_hub:
 #     m1, b1 = eq

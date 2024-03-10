@@ -32,8 +32,16 @@ for coord in restircted_coordinates:
 
 folium.PolyLine(locations = restircted_coordinates + [restircted_coordinates[0]], color='red').add_to(my_map_res)
 
+
+
+coordi = [(27.596517988329094, 27.0308446729577),
+        (27.740269007943272, 26.777926901017715),
+        (26.06211937004413, 29.730489383972696),
+        (27.879687908924524, 27.050221095123614)]
+        # (27.746681800521216, 26.961389179804318),
+        # (31.800896223131502, 29.66911167916153)]
+for coord in coordi:
+    folium.Marker(location=coord, popup='intersect').add_to(my_map_res)
+
 my_map_res.save("map_with_restricted_areas.html")
-#
-#
-#
 #
