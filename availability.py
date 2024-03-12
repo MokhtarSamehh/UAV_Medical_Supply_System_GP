@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 import folium
+from math import radians, sin, cos, sqrt, atan2
+
 def haversine(lat1, lon1, lat2, lon2):
     # Convert latitude and longitude from degrees to radians
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
@@ -92,8 +94,20 @@ print(optimal_coord)
 
 map_center = [27.165862605978425, 31.164374416309347]
 my_map_sol = folium.Map(location=map_center, zoom_start=6)
-
+i = 0
 for coord in optimal_coord:
-    folium.Marker(location=coord, popup='Point').add_to(my_map_sol)
+    folium.Marker(location=coord, popup=f"{optimal_sol[i]}").add_to(my_map_sol)
+    i += 1
 
 my_map_sol.save("optimal_solution.html")
+
+# for i in range(len(comb_coord)):
+#     lat1, lon1 = comb_coord[i]
+#     for j in range(len(comb_coord)):
+#         lat2, lon2 = comb_coord[j]
+#         row.append(haversine(lat1, lon1, lat2, lon2))
+    
+#     dist_mat.append(row)
+#     row =[]
+
+# print(dist_mat)
