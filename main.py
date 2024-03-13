@@ -67,5 +67,3 @@ with rasterio.open(dem3_path) as src3:
 # show(out_image, cmap='terrain')
 
 print(src3)
-
-# testing push
