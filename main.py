@@ -65,4 +65,5 @@ with rasterio.open(dem3_path) as src3:
 #     out_meta = src.meta.copy()
 
 # show(out_image, cmap='terrain')
+
 print(src3)
