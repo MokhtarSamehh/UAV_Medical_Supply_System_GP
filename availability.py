@@ -1,8 +1,31 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
-import folium
+import folium, math
 from math import radians, sin, cos, sqrt, atan2
+from shapely.geometry import Polygon
+from shapely.affinity import translate, scale
+
+def is_number(element):
+    return isinstance(element, (int, float)) and not math.isnan(element)
+
+def enlarge_shape_at_centroid(coordinates, scale_factor):
+    # Create a shapely Polygon from the coordinates
+    original_shape = Polygon(coordinates)
+
+    # Calculate the centroid
+    centroid = original_shape.centroid
+
+    # Translate the shape to have its centroid at the origin
+    translated_shape = translate(original_shape, -centroid.x, -centroid.y)
+
+    # Scale the translated shape
+    scaled_shape = scale(translated_shape, xfact=scale_factor, yfact=scale_factor)
+
+    # Translate the scaled shape back to its original position
+    enlarged_shape = translate(scaled_shape, centroid.x, centroid.y)
+
+    return enlarged_shape
 
 def haversine(lat1, lon1, lat2, lon2):
     # Convert latitude and longitude from degrees to radians
@@ -98,6 +121,36 @@ i = 0
 for coord in optimal_coord:
     folium.Marker(location=coord, popup=f"{optimal_sol[i]}").add_to(my_map_sol)
     i += 1
+
+
+restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
+
+
+rest = []
+
+for column in restricted:
+    if is_number(column[1]):
+        rest.append(column)
+
+
+
+for res in rest:
+    restricted_coordinates = []
+    coordinates_list = []
+    for coord in res:
+        # print(is_number(coord))
+        if is_number(coord):
+            restricted_coordinates.append(coord)
+    coordinates_list = [(restricted_coordinates[i], restricted_coordinates[i+1]) for i in range(0, len(restricted_coordinates), 2)]
+    print(coordinates_list)
+    coordinates_enlarged = enlarge_shape_at_centroid(coordinates_list, 3)
+    polygon_coordinates = list(coordinates_enlarged.exterior.coords)
+    polygon_coordinates.pop()
+    folium.PolyLine(locations = coordinates_list + [coordinates_list[0]], color='red').add_to(my_map_sol)
+    folium.PolyLine(locations = polygon_coordinates + [polygon_coordinates[0]], color='green').add_to(my_map_sol)
+ 
+
+
 
 my_map_sol.save("optimal_solution.html")
 
