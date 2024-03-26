@@ -247,8 +247,8 @@ print(route_coordinates)
 
 my_map_res = folium.Map(location=map_center, zoom_start=6)
 
-
-for coord in comb_coord:
+comb = hubs + polygon_coordinates
+for coord in comb:
      folium.Marker(location=coord, popup='Point').add_to(my_map_res)
 
 # for coord in restircted_coordinates:
@@ -262,39 +262,3 @@ my_map_res.save("test_map_with_restricted_areas.html")
 
 
 
-# c = 0
-# for eq in equation_hub:
-#     m1, b1 = eq
-#     i = 0
-#     for res in equation_res:
-#         m2, b2 = res
-#         x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
-#         int_coord.append((x_intersect, y_intersect))
-#         print(x_intersect, y_intersect, i, c)
-#         if i != len(x_range)-1:
-#             if (x_intersect > x_range[i] and x_intersect < x_range[i+1]) or (x_intersect < x_range[i] and x_intersect > x_range[i+1]):
-#                 dist_mat[shortest_route1[i]][shortest_route1[i+1]] = inf  #index need revision
-#                 dist_mat[shortest_route1[i+1]][shortest_route1[i]] = inf
-#                 c += 1
-#         else:
-#             if (x_intersect > x_range[i] and x_intersect < x_range[0]) or (x_intersect < x_range[i] and x_intersect > x_range[0]):
-#                 dist_mat[shortest_route1[i]][shortest_route1[i+1]] = inf  #index need revision
-#                 dist_mat[shortest_route1[i+1]][shortest_route1[i]] = inf
-#                 c += 1
-#     i += 1
-
-
-# print(dist_mat)
-
-# shortest_distance1, shortest_route1 = dijkastra(dist_mat, 0, 1, ['A', 'B', 'C', 'D'])
-
-# print(shortest_distance1, shortest_route1)
-
-# i = 1
-# for coord in int_coord:
-#      folium.Marker(location=coord, popup=f"Res{i}").add_to(my_map_res)
-#      i += 1
-
-# my_map_res.save("test_map_with_restricted_areas.html")
-
-# print(c)

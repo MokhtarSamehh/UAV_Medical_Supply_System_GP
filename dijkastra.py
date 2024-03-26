@@ -41,7 +41,8 @@ for i in range(len(distance_matrix)):
         break
     k = unvisited_index[np.argmin(shortest_distance[unvisited_index])]
 
-print(previous_vertex, shortest_distance)
+print(previous_vertex)
+print(shortest_distance)
 end_point = input('Enter the End Point:')
 start_point = input('Enter Start Point:')
 P = end_point
