@@ -19,24 +19,24 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
 
     return distance
-hubs = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0])
-lat = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='H', skiprows=[0])
-lon = pd.read_excel("blood banks with virtual hubs 3.xlsx", sheet_name='Sheet1', header=None, usecols='J', skiprows=[0])
+hubs = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0])
+lat = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='H', skiprows=[0])
+lon = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='J', skiprows=[0])
 hublist = hubs.values.tolist()
 latlist = lat.values.tolist()
 lonlist = lon.values.tolist()
 # print(latlist)
-start_point = input('Enter Start Point:')   #Here you Enter where you want your start point
-lsthub = hublist[int(start_point)]
-lstlat = latlist[int(start_point)]
-lstlon = lonlist[int(start_point)]
-hublist.remove(lsthub)
-latlist.remove(lstlat)
-lonlist.remove(lstlon)
-hublist = [lsthub] + hublist
-latlist = [lstlat] + latlist
-lonlist = [lstlon] + lonlist
-print(hublist)
+# start_point = input('Enter Start Point:')   #Here you Enter where you want your start point
+# lsthub = hublist[int(start_point)]
+# lstlat = latlist[int(start_point)]
+# lstlon = lonlist[int(start_point)]
+# hublist.remove(lsthub)
+# latlist.remove(lstlat)
+# lonlist.remove(lstlon)
+# hublist = [lsthub] + hublist
+# latlist = [lstlat] + latlist
+# lonlist = [lstlon] + lonlist
+# print(hublist)
 distmat = []
 
 for index in range(len(latlist)):
