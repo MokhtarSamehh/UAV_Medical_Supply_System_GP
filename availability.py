@@ -6,7 +6,8 @@ from math import radians, sin, cos, sqrt, atan2
 from shapely.geometry import Polygon
 from shapely.affinity import translate, scale
 import random
-
+import pulp
+# -*- coding: utf-8 -*-
 
 def is_number(element):
     return isinstance(element, (int, float)) and not math.isnan(element)
@@ -142,7 +143,7 @@ btc = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Shee
 hubs = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
 distance_matrix = pd.read_csv('result.csv').values.tolist()
 distance_matrix = [row[1:] for row in distance_matrix]
-max_range = 70                                 # input('Enter Maximum Range:')
+max_range = 80                                 # input('Enter Maximum Range:')
 availability_parameter = []
 print(len(percentage))
 for i in range(0,len(percentage)):
@@ -182,15 +183,17 @@ for i in range(0,len(percentage)):
         availability_parameter.append(9)
     elif percentage[i] >= [0.05] and percentage[i] < [0.1] and btc[i] == ['No']:
         availability_parameter.append(9.5)
-    elif percentage[i] >= [0] and percentage[i] < [0.05] and btc[i] == ['Yes']:
+    elif percentage[i] > [0] and percentage[i] < [0.05] and btc[i] == ['Yes']:
         availability_parameter.append(9.8)
+    elif percentage[i] > [0] and percentage[i] < [0.05] and btc[i] == ['No']:
+        availability_parameter.append(9.9)
     else: 
-        availability_parameter.append(10)
+        availability_parameter.append(10000)
 
 A = (np.array(distance_matrix) < max_range).astype(int)
-B = np.ones(len(hubs))
-
+B = 2 * np.ones(len(hubs))
 N_hubs = 15
+
 VH = []
 VH_B = np.ones(N_hubs)
 for i in range(N_hubs,0,-1):
@@ -201,29 +204,51 @@ for i in range(N_hubs,0,-1):
 # print(VH)
     
 A [-N_hubs:] = VH
-
+B [-N_hubs:] = VH_B
 i = 0
 
 for i in range(1,len(hubs)-N_hubs):
     A[i][i] = 0
 
+Sum_A = [sum(sublist[:len(hubs)]) for sublist in A]
+print(Sum_A)
+end_routes = np.array(Sum_A) < 2
+print(end_routes)
+end_routes = [i for i in range(len(end_routes)) if end_routes[i] == 1]
+print(end_routes)
 
+B[end_routes] = 1
 
-
-# CONCATENATION ERROOOOOOOOOR
 A = np.array(-A)
 B = np.array(-B)
-A = np.concatenate((A, VH), axis=0)
-B = np.concatenate((B, VH_B), axis=0)
+# Create a minimization problem
+problem = pulp.LpProblem("Integer Programming Problem", pulp.LpMinimize)
 
-print(len(A))
-variable_bounds = [(0,1)for _ in range(len(hubs))]
-result = linprog(availability_parameter, A_ub = A, b_ub = B, bounds = variable_bounds, method = 'highs')
-integer_result_x = result.x.astype(int) == 1
-hubs = np.array(hubs)
-optimal_sol = hubs[integer_result_x]
+# Define decision variables
+variables = [pulp.LpVariable(f"x{i}", lowBound=0, upBound=1, cat="Integer") for i in range(1, len(hubs)+1)]  
 
-print(optimal_sol)
+# Add objective function
+problem += pulp.lpSum(availability_parameter[i - 1] * variables[i - 1] for i in range(1, len(hubs)))
+
+# Add constraints
+for i in range(A.shape[0]):
+    constraint_expr = pulp.lpSum(A[i, j] * variables[j] for j in range(A.shape[1]))
+    problem += constraint_expr <= B[i]
+
+# Solve the problem
+status = problem.solve()
+
+# Print the solution
+
+integer_result_x =[]
+for var in variables:
+    integer_result_x.append(pulp.value(var))
+# hubs = np.array(hubs)
+print(integer_result_x)
+optimal_sol = [hubs[i] for i in range(len(hubs)) if integer_result_x[i] == 1]
+
+
+# print(optimal_sol)
 
 coordinates = [(lat,lon) for lat, lon in coord]
 
@@ -244,31 +269,56 @@ my_map_sol = folium.Map(location=map_center, zoom_start=6)
 #     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
 #     i += 1
 
+
 # my_map_sol.save("optimal_solution.html")
 i = 0
+
 for coord in optimal_coord:
-    custom_icon = folium.Icon(color='red', icon='map-marker')
-    folium.Marker(location=coord, popup=f"{i+1}", icon=custom_icon).add_to(my_map_sol)
+    if i >= 52-15:
+        custom_icon = folium.Icon(color='green', icon='map-marker')
+    else:
+        custom_icon = folium.Icon(color='red', icon='map-marker')
+    folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
     i += 1
-
-my_map_sol.save("optimal_solution.html")
-# for 
+    # folium.Circle(
+    # location=coord,
+    # radius= max_range * 1000,
+    # color='blue',
+    # fill=True,
+    # fill_color='lightblue',
+    # fill_opacity=0.2,
+# ).add_to(my_map_sol)
+index = [end for end in end_routes if end <len(hubs)-N_hubs]
+index.append(114)
+index.append(134)
+optimal_coord_add = [coordinates[i] for i in index]
+for coord in optimal_coord_add:
+    custom_icon = folium.Icon(color='red', icon='map-marker')
+    folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
+    i += 1
 #     folium.Circle(
-#         location=[51.5074, 0.1278],
-#         radius=5000,  # Radius in meters
-#         color='blue',
-#         fill=True,
-#         fill_color='blue',
-#         fill_opacity=0.2,
-#         popup="Circle"
-#     ).add_to(m)
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
+# ).add_to(my_map_sol)
+    
+my_map_sol.save("optimal_solution.html")
 
-# # Save the map
-# m.save("map_with_circle.html")
+print(len(index),sum(integer_result_x))
+
+# optimal_coord += optimal_coord_add
+
+for idx in index:
+    integer_result_x[idx] = 1
+optimal_sol = [hubs[i] for i in range(len(hubs)) if integer_result_x[i] == 1]
 
 
-
-
+exportA = pd.DataFrame(optimal_sol)
+exportA.to_csv("hubs.csv")
+print(optimal_sol)
 
 restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
 
