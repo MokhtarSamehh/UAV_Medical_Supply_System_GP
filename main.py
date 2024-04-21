@@ -51,17 +51,18 @@ with rasterio.open(dem4_path) as src4:
     transform4 = src4.transform
     crs4 = src4.crs
 
-egypt, out_trans = merge([rasterio.open(dem1_path), rasterio.open(dem2_path), rasterio.open(dem3_path), rasterio.open(dem4_path)])
-show(egypt, cmap='terrain')
+# egypt, out_trans = merge([rasterio.open(dem1_path), rasterio.open(dem2_path), rasterio.open(dem3_path), rasterio.open(dem4_path)])
+# show(egypt, cmap='terrain')
 
-image_array = egypt
+# image_array = egypt
 
-tiff.imwrite('output.tif', image_array)
+# tiff.imwrite('output.tif', image_array)
 
-bbox = box(2500, 4000, 10000, 8000) #xmin, ymin, xmax, ymax
+bbox = box(2500, 10000, 2510, 10010) #xmin, ymin, xmax, ymax
 
 with rasterio.open('output.tif') as src:
     out_image, out_transform = mask(src, [bbox], crop=True)
     out_meta = src.meta.copy()
 
 show(out_image, cmap='terrain')
+tiff.imwrite('small_output.tif', out_image)
