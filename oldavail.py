@@ -274,24 +274,23 @@ my_map_sol = folium.Map(location=map_center, zoom_start=6)
 i = 0
 
 for coord in optimal_coord:
-    if i >= len(optimal_coord)-N_hubs:
+    if i >= 52-15:
         custom_icon = folium.Icon(color='green', icon='map-marker')
     else:
         custom_icon = folium.Icon(color='red', icon='map-marker')
     folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
     i += 1
-    # folium.Circle(
-    # location=coord,
-    # radius= max_range * 1000,
-    # color='blue',
-    # fill=True,
-    # fill_color='lightblue',
-    # fill_opacity=0.2,
+#     folium.Circle(
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
 # ).add_to(my_map_sol)
 index = [end for end in end_routes if end <len(hubs)-N_hubs]
 index.append(114)
 index.append(134)
-print(index)
 optimal_coord_add = [coordinates[i] for i in index]
 for coord in optimal_coord_add:
     custom_icon = folium.Icon(color='red', icon='map-marker')
@@ -320,20 +319,6 @@ optimal_sol = [hubs[i] for i in range(len(hubs)) if integer_result_x[i] == 1]
 exportA = pd.DataFrame(optimal_sol)
 exportA.to_csv("hubs.csv")
 print(optimal_sol)
-
-optimal_coord += optimal_coord_add
-
-# i = 0
-# for coor in optimal_coord:
-#     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-#     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
-#     i += 1
-# my_map_sol.save("optimal_solution.html")
-indices = [index for index, value in enumerate(hubs) if value in optimal_sol]
-optimal_coord = [coordinates[i] for i in indices]
-
-exportA = pd.DataFrame(optimal_coord)
-exportA.to_csv("Opt_Sol.csv")
 
 restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
 
@@ -371,7 +356,7 @@ for res in rest:
     folium.PolyLine(locations = coordinates_list + [coordinates_list[0]], color='black').add_to(my_map_sol)
     # folium.PolyLine(locations = polygon_coordinates + [polygon_coordinates[0]], color='red').add_to(my_map_sol)
  
-# optimal_coord = list(set(optimal_coord))
+
 print(len(optimal_coord))
 my_map_sol.save("optimal_solution.html")
 
@@ -389,15 +374,14 @@ rest_area_polygon = [item for sublist in rest_area_polygon for item in sublist]
 
 # Generate random coordinates
 
-lower_bound = 30
+lower_bound = 22
 upper_bound = 31.65
 lat = random.uniform(lower_bound, upper_bound)
 
-lower_bound = 30
-upper_bound = 31.9
+lower_bound = 25
+upper_bound = 36.9
 lon = random.uniform(lower_bound, upper_bound)
-# lat = 31.21
-# lon = 31.369635
+
 start_coord = (lat, lon)
 start = [(lat, lon)]
 print(start)
@@ -405,7 +389,7 @@ row = []
 dist_mat = []
 comb = start + optimal_coord + rest_area_polygon
 comb_coord = start + optimal_coord + rest_area_polygon
-print(optimal_coord,comb)
+# print(comb)
 # print(rest_area_list)
 for i in range(len(comb_coord)):
     lat1, lon1 = comb_coord[i]
@@ -484,14 +468,13 @@ for list in rest_area_list:
     q += 1
 folium.Marker(location=start_coord, popup=f"Start").add_to(my_map_sol)
 hubs_number = len(optimal_coord)
-print(optimal_coord, hubs_number)
 ind = [i for i in range(0,hubs_number)]
 shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
     
 # print(shortest_distance, previous_vertex,comb)
-# i = 0
-# # print(co)
-# for coord in comb:
+i = 0
+# print(co)
+# for coord in co:
 #     # custom_icon = folium.Icon(color='gray', icon='map-marker')
 #     folium.Marker(location=coord, popup=f"{i}").add_to(my_map_sol)
 #     i += 1
@@ -517,32 +500,19 @@ shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(di
 # Getting closest N hubs
     
 shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
-shortest_distance = shortest_distance[:hubs_number] 
-print(shortest_distance)
 route_coordinates = [] 
-
-avail_para = [availability_parameter[i] for i in indices]
-avail_para = [ x / 10 + 1 for x in avail_para]
-shortest_dist_avail = shortest_distance[:-N_hubs] * avail_para[:-N_hubs]
-emergency = 'Yes'
-if emergency == 'Yes':
-    shortest_dist_avail = shortest_dist_avail.tolist()
-else:
-    shortest_dist_avail = shortest_distance.tolist()
-
-i = 0
 N = 5
 shortest_ind = []
 for i in range(N):
-    dist = min(shortest_dist_avail[1:])
-    min_ind = shortest_dist_avail.index(dist)
+    dist = min(shortest_distance[1:hubs_number])
+    min_ind = [index for index, value in enumerate(shortest_distance) if value == dist]
     shortest_ind.append(min_ind)
-    shortest_dist_avail[min_ind] = inf
-    print(shortest_distance[min_ind], avail_para[min_ind],dist, min_ind)
+    shortest_distance[min_ind] = inf
+    print(dist, min_ind)
 
-# shortest_ind = [item for sublist in shortest_ind for item in sublist]
+shortest_ind = [item for sublist in shortest_ind for item in sublist]
 print(shortest_ind)
-k = 0
+
 for i in shortest_ind:
     print(i)
     route = []
@@ -557,12 +527,12 @@ for i in shortest_ind:
         route_coordinates.append(comb[i])
     print(route_coordinates)  
     folium.PolyLine(locations=route_coordinates, color='blue').add_to(my_map_sol)
-    if k == 0:
-        folium.PolyLine(locations=route_coordinates, color='red').add_to(my_map_sol)
-    k += 1
-my_map_sol.save("optimal_solution.html")
-
-print(availability_parameter, indices, avail_para[:-N_hubs],shortest_dist_avail)
 
 shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
 
+route_coordinates = []  
+for i in shortest_route:
+    route_coordinates.append(comb[i])
+
+folium.PolyLine(locations=route_coordinates, color='red').add_to(my_map_sol)
+my_map_sol.save("optimal_solution.html")
