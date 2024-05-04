@@ -12,7 +12,7 @@ row_division_denumerator = 200
 col_division_denumerator = 200
 
 # Defaults
-dem_path = 'DEM/gt30e020n40.dem'
+dem_path = 'Scripts/DEM/gt30e020n40.dem'
 dem_rows = 6000
 dem_cols = 4800
 
@@ -115,7 +115,7 @@ with rio.open(dem_path, 'r') as raster_dem:
                     
                     unapproved_rectangles.pop(idx + 1)
                     # print("popped")
-                
+
         
     for rectangle in unapproved_rectangles:
         folium.Rectangle(
@@ -139,6 +139,6 @@ with rio.open(dem_path, 'r') as raster_dem:
     # ).add_to(this_map)
 
     # Save the map to an HTML file
-    this_map.save('simple_dot_plot.html')
-    webbrowser.open('simple_dot_plot.html')
+    this_map.save('elevation_map.html')
+    webbrowser.open('elevation_map.html')
     
