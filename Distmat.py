@@ -19,9 +19,9 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
 
     return distance
-hubs = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0])
-lat = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='H', skiprows=[0])
-lon = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='J', skiprows=[0])
+hubs = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0])
+lat = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='H', skiprows=[0])
+lon = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='J', skiprows=[0])
 hublist = hubs.values.tolist()
 latlist = lat.values.tolist()
 lonlist = lon.values.tolist()

@@ -137,13 +137,13 @@ def dijkastra(distance_matrix, hubs_number):
     shortest_route.append(ind[np.argmin(shortest_distance[1:hubs_number]) + 1])
     return shortest_distance, previous_vertex, shortest_dist, shortest_route
 
-coord = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='H,J', skiprows=[0]).values.tolist()
-percentage = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='R', skiprows=[0]).values.tolist()
-btc = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='F', skiprows=[0]).values.tolist()
-hubs = pd.read_excel("blood banks with virtual hubs 80 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
+coord = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='H,J', skiprows=[0]).values.tolist()
+percentage = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='R', skiprows=[0]).values.tolist()
+btc = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='F', skiprows=[0]).values.tolist()
+hubs = pd.read_excel("blood banks 30 km.xlsx", sheet_name='Sheet1', header=None, usecols='A', skiprows=[0]).values.tolist()
 distance_matrix = pd.read_csv('result.csv').values.tolist()
 distance_matrix = [row[1:] for row in distance_matrix]
-max_range = 80                                 # input('Enter Maximum Range:')
+max_range = 30                                 # input('Enter Maximum Range:')
 availability_parameter = []
 print(len(percentage))
 for i in range(0,len(percentage)):
@@ -192,7 +192,7 @@ for i in range(0,len(percentage)):
 
 A = (np.array(distance_matrix) < max_range).astype(int)
 B = 2 * np.ones(len(hubs))
-N_hubs = 15
+N_hubs = 13
 
 VH = []
 VH_B = np.ones(N_hubs)
@@ -201,7 +201,7 @@ for i in range(N_hubs,0,-1):
     Virtual_Hubs [-i] = 1
     VH.append(Virtual_Hubs)
 
-# print(VH)
+print(VH)
     
 A [-N_hubs:] = VH
 B [-N_hubs:] = VH_B
@@ -219,10 +219,11 @@ print(end_routes)
 
 B[end_routes] = 1
 
-A = np.array(-A)
-B = np.array(-B)
+A = np.array(A)
+B = np.array(B)
+# print(len(B))
 # Create a minimization problem
-problem = pulp.LpProblem("Integer Programming Problem", pulp.LpMinimize)
+problem = pulp.LpProblem("Integer Programming Problem", pulp.LpMaximize)
 
 # Define decision variables
 variables = [pulp.LpVariable(f"x{i}", lowBound=0, upBound=1, cat="Integer") for i in range(1, len(hubs)+1)]  
@@ -244,10 +245,7 @@ integer_result_x =[]
 for var in variables:
     integer_result_x.append(pulp.value(var))
 # hubs = np.array(hubs)
-integer_result_x[133] = 0
-integer_result_x[135] = 0
-integer_result_x[167] = 0
-integer_result_x[101] = 0
+integer_result_x[-1] = 1
 print(integer_result_x)
 optimal_sol = [hubs[i] for i in range(len(hubs)) if integer_result_x[i] == 1]
 
@@ -264,62 +262,61 @@ exportA.to_csv("binary.csv")
 
 
 map_center = [27.165862605978425, 31.164374416309347]
-my_map_sol = folium.Map(location=map_center, zoom_start=5.4)
+my_map_sol = folium.Map(location=map_center, zoom_start=6)
 
-# i = 0
+
+i = 0
+for coor in coordinates:
+    # custom_icon = folium.Icon(color='gray', icon='map-marker')
+    folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
+    i += 1
+
 # for coor in coordinates:
 #     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-#     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
+#     folium.Marker(location=coor, popup=f"{coordinates[i]}").add_to(my_map_sol)
 #     i += 1
 
-
-# my_map_sol.save("optimal_solution.html")
-
+my_map_sol.save("optimal_solution.html")
 i = 0
 
 for coord in optimal_coord:
     if i >= len(optimal_coord)-N_hubs:
-        custom_icon = folium.Icon(color='green', icon='map-marker')
+        custom_icon = folium.Icon(color='red', icon='map-marker', popup=f"{optimal_coord[i]}")
     else:
-        custom_icon = folium.Icon(color='red', icon='map-marker')
-    folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
+        custom_icon = folium.Icon(color='red', icon='map-marker', popup=f"{optimal_coord[i]}")
+    folium.Marker(location=coord, icon=custom_icon, popup=f"{optimal_coord[i]}").add_to(my_map_sol)
     i += 1
-    # folium.Circle(
-    # location=coord,
-    # radius= max_range * 1000,
-    # color='blue',
-    # fill=True,
-    # fill_color='lightblue',
-    # fill_opacity=0.2,
+#     folium.Circle(
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
 # ).add_to(my_map_sol)
 index = [end for end in end_routes if end <len(hubs)-N_hubs]
-index.append(114)
-index.append(134)
-index.append(129)
-index.append(126)
-index.append(96)
-index.append(156)
-index.append(177)
+# index.append(114)
+# index.append(134)
 print(index)
 optimal_coord_add = [coordinates[i] for i in index]
 for coord in optimal_coord_add:
     custom_icon = folium.Icon(color='red', icon='map-marker')
     folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
     i += 1
-    # folium.Circle(
-    # location=coord,
-    # radius= max_range * 1000,
-    # color='blue',
-    # fill=True,
-    # fill_color='lightblue',
-    # fill_opacity=0.2,
+#     folium.Circle(
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
 # ).add_to(my_map_sol)
     
 my_map_sol.save("optimal_solution.html")
 
 print(len(index),sum(integer_result_x))
 
-# optimal_coord += optimal_coord_add
+optimal_coord += optimal_coord_add
 
 for idx in index:
     integer_result_x[idx] = 1
@@ -346,16 +343,6 @@ exportA.to_excel("Actual.xlsx")
 
 exportA = pd.DataFrame(optimal_coord[-N_hubs:])
 exportA.to_excel("Virtual.xlsx")
-
-print(len(optimal_coord))
-# i = 0
-# for coor in coordinates:
-#     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-#     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
-#     i += 1
-
-
-# my_map_sol.save("optimal_solution.html")
 
 # restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
 
