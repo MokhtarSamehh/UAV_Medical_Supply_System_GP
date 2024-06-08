@@ -1,32 +1,27 @@
 import numpy as np
 import rasterio as rio
-from rasterio.plot import show
-import matplotlib.pyplot as plt
 import folium
 import pandas as pd
 import webbrowser
 
 ####### Adjust settings here #######
 max_approved_height = 1000
-row_division_denumerator = 200
-col_division_denumerator = 200
+row_division_denumerator = 50
+col_division_denumerator = 50
 
 # Defaults
-dem_path = 'Scripts/DEM/gt30e020n40.dem'
+dem_path = 'GP/Scripts/DEM/gt30e020n40.dem'
 dem_rows = 6000
 dem_cols = 4800
 
-#create a map
+# Create a map
 this_map = folium.Map(location=[20.0041, 39.9958], prefer_canvas=True, zoom_start=5)
 
 # Args for the big boundary rectangle
 gtopo_rect_kw = {
     "color": "blue",
     "line_cap": "round",
-    # "fill": True,
-    # "fill_color": "red",
     "weight": 2,
-    # "popup": "Tokyo, Japan",
     "tooltip": "bob"
 }
 
@@ -42,12 +37,10 @@ def plotDot(point):
 
 def unapproved_rec_kw(rectangle):
     return {
-        # "color": "blue",
         "line_cap": "round",
         "fill": True,
         "fill_color": "red",
         "weight": 2,
-        # "popup": "Tokyo, Japan",
         "tooltip": f"""
         <strong>Index: {rectangle["index"]}</strong><br><br>
         <strong>Upper Left: {rectangle["upper_left"]}</strong><br>
@@ -103,9 +96,7 @@ with rio.open(dem_path, 'r') as raster_dem:
                 }
             
                 unapproved_rectangles.append(rectangle)
-    
-    # print(rect_rows, rect_cols)
-    
+        
     for idx, current_rectangle in enumerate(unapproved_rectangles):
         for next_rectangle in unapproved_rectangles[idx:]:            
             if current_rectangle["lower_right"] == next_rectangle["lower_left"] \
@@ -114,7 +105,6 @@ with rio.open(dem_path, 'r') as raster_dem:
                     current_rectangle["upper_right"] = next_rectangle["upper_right"]
                     
                     unapproved_rectangles.pop(idx + 1)
-                    # print("popped")
 
         
     for rectangle in unapproved_rectangles:
@@ -129,14 +119,6 @@ with rio.open(dem_path, 'r') as raster_dem:
                             columns=["latitude", "longitude"])
 
     points_df.apply(plotDot, axis=1)
-
-    # Create rectangle around GTOPO30 DEM file borders
-    # folium.Rectangle(
-    #     bounds=[points_list[1], points_list[0]],
-    #     line_join="round",
-    #     dash_array="5, 5",
-    #     **gtopo_rect_kw,
-    # ).add_to(this_map)
 
     # Save the map to an HTML file
     this_map.save('elevation_map.html')
