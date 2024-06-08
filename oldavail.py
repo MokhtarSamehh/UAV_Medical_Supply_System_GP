@@ -244,10 +244,6 @@ integer_result_x =[]
 for var in variables:
     integer_result_x.append(pulp.value(var))
 # hubs = np.array(hubs)
-integer_result_x[133] = 0
-integer_result_x[135] = 0
-integer_result_x[167] = 0
-integer_result_x[101] = 0
 print(integer_result_x)
 optimal_sol = [hubs[i] for i in range(len(hubs)) if integer_result_x[i] == 1]
 
@@ -264,7 +260,8 @@ exportA.to_csv("binary.csv")
 
 
 map_center = [27.165862605978425, 31.164374416309347]
-my_map_sol = folium.Map(location=map_center, zoom_start=5.4)
+my_map_sol = folium.Map(location=map_center, zoom_start=6)
+
 
 # i = 0
 # for coor in coordinates:
@@ -274,45 +271,38 @@ my_map_sol = folium.Map(location=map_center, zoom_start=5.4)
 
 
 # my_map_sol.save("optimal_solution.html")
-
 i = 0
 
 for coord in optimal_coord:
-    if i >= len(optimal_coord)-N_hubs:
+    if i >= 52-15:
         custom_icon = folium.Icon(color='green', icon='map-marker')
     else:
         custom_icon = folium.Icon(color='red', icon='map-marker')
     folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
     i += 1
-    # folium.Circle(
-    # location=coord,
-    # radius= max_range * 1000,
-    # color='blue',
-    # fill=True,
-    # fill_color='lightblue',
-    # fill_opacity=0.2,
+#     folium.Circle(
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
 # ).add_to(my_map_sol)
 index = [end for end in end_routes if end <len(hubs)-N_hubs]
 index.append(114)
 index.append(134)
-index.append(129)
-index.append(126)
-index.append(96)
-index.append(156)
-index.append(177)
-print(index)
 optimal_coord_add = [coordinates[i] for i in index]
 for coord in optimal_coord_add:
     custom_icon = folium.Icon(color='red', icon='map-marker')
     folium.Marker(location=coord, icon=custom_icon).add_to(my_map_sol)
     i += 1
-    # folium.Circle(
-    # location=coord,
-    # radius= max_range * 1000,
-    # color='blue',
-    # fill=True,
-    # fill_color='lightblue',
-    # fill_opacity=0.2,
+#     folium.Circle(
+#     location=coord,
+#     radius= max_range * 1000,
+#     color='blue',
+#     fill=True,
+#     fill_color='lightblue',
+#     fill_opacity=0.2,
 # ).add_to(my_map_sol)
     
 my_map_sol.save("optimal_solution.html")
@@ -330,105 +320,46 @@ exportA = pd.DataFrame(optimal_sol)
 exportA.to_csv("hubs.csv")
 print(optimal_sol)
 
-optimal_coord += optimal_coord_add
+restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
 
-# i = 0
-# for coor in optimal_coord:
-#     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-#     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
-#     i += 1
-# my_map_sol.save("optimal_solution.html")
-indices = [index for index, value in enumerate(hubs) if value in optimal_sol]
-optimal_coord = [coordinates[i] for i in indices]
 
-exportA = pd.DataFrame(optimal_coord[:-N_hubs])
-exportA.to_excel("Actual.xlsx")
+rest = []
 
-exportA = pd.DataFrame(optimal_coord[-N_hubs:])
-exportA.to_excel("Virtual.xlsx")
+for column in restricted:
+    if is_number(column[1]):
+        rest.append(column)
+
+
+x_range =[]
+rest_area = []
+rest_area_list = []
+rest_area_polygon = []
+for res in rest:
+    restricted_coordinates = []
+    coordinates_list = []
+    row =[]
+    for coord in res:
+        # print(is_number(coord))
+        if is_number(coord):
+            restricted_coordinates.append(coord)
+    for i in range(0, len(restricted_coordinates), 2):
+        rest_area.append((restricted_coordinates[i], restricted_coordinates[i+1])) 
+    coordinates_list = [(restricted_coordinates[i], restricted_coordinates[i+1]) for i in range(0, len(restricted_coordinates), 2)]
+    # print(coordinates_list)
+    row = [restricted_coordinates[i] for i in range(0, len(restricted_coordinates), 2)]
+    x_range.append(row)
+    rest_area_list.append(coordinates_list)
+    coordinates_enlarged = enlarge_shape_at_centroid(coordinates_list, 2)
+    polygon_coordinates = list(coordinates_enlarged.exterior.coords)
+    polygon_coordinates.pop()
+    rest_area_polygon.append(polygon_coordinates)
+    folium.PolyLine(locations = coordinates_list + [coordinates_list[0]], color='black').add_to(my_map_sol)
+    # folium.PolyLine(locations = polygon_coordinates + [polygon_coordinates[0]], color='red').add_to(my_map_sol)
+ 
 
 print(len(optimal_coord))
-# i = 0
-# for coor in coordinates:
-#     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-#     folium.Marker(location=coor, popup=f"{i+1}").add_to(my_map_sol)
-#     i += 1
+my_map_sol.save("optimal_solution.html")
 
-
-# my_map_sol.save("optimal_solution.html")
-
-# restricted = pd.read_excel("Prohibited flying areas.xlsx", sheet_name='Sheet1').values.tolist()
-
-
-# rest = []
-
-# for column in restricted:
-#     if is_number(column[1]):
-#         rest.append(column)
-
-
-# x_range =[]
-# rest_area = []
-# rest_area_list = []
-# rest_area_polygon = []
-# for res in rest:
-#     restricted_coordinates = []
-#     coordinates_list = []
-#     row =[]
-#     for coord in res:
-#         # print(is_number(coord))
-#         if is_number(coord):
-#             restricted_coordinates.append(coord)
-#     for i in range(0, len(restricted_coordinates), 2):
-#         rest_area.append((restricted_coordinates[i], restricted_coordinates[i+1])) 
-#     coordinates_list = [(restricted_coordinates[i], restricted_coordinates[i+1]) for i in range(0, len(restricted_coordinates), 2)]
-#     # print(coordinates_list)
-#     row = [restricted_coordinates[i] for i in range(0, len(restricted_coordinates), 2)]
-#     x_range.append(row)
-#     rest_area_list.append(coordinates_list)
-#     coordinates_enlarged = enlarge_shape_at_centroid(coordinates_list, 2)
-#     polygon_coordinates = list(coordinates_enlarged.exterior.coords)
-#     polygon_coordinates.pop()
-#     rest_area_polygon.append(polygon_coordinates)
-#     folium.PolyLine(locations = coordinates_list + [coordinates_list[0]], color='black').add_to(my_map_sol)
-#     # folium.PolyLine(locations = polygon_coordinates + [polygon_coordinates[0]], color='red').add_to(my_map_sol)
- 
-# # optimal_coord = list(set(optimal_coord))
-# print(len(optimal_coord))
-# my_map_sol.save("optimal_solution.html")
-
-# # for i in range(len(comb_coord)):
-# #     lat1, lon1 = comb_coord[i]
-# #     for j in range(len(comb_coord)):
-# #         lat2, lon2 = comb_coord[j]
-# #         row.append(haversine(lat1, lon1, lat2, lon2))
-    
-# #     dist_mat.append(row)
-# #     row =[]
-
-# # print(dist_mat)
-# rest_area_polygon = [item for sublist in rest_area_polygon for item in sublist]
-
-# # Generate random coordinates
-
-# lower_bound = 30
-# upper_bound = 31.65
-# lat = random.uniform(lower_bound, upper_bound)
-
-# lower_bound = 30
-# upper_bound = 31.9
-# lon = random.uniform(lower_bound, upper_bound)
-# # lat = 31.21
-# # lon = 31.369635
-# start_coord = (lat, lon)
-# start = [(lat, lon)]
-# print(start)
-# row = []
-# dist_mat = []
-# comb = start + optimal_coord + rest_area_polygon
-# comb_coord = start + optimal_coord + rest_area_polygon
-# print(optimal_coord,comb)
-# # print(rest_area_list)
 # for i in range(len(comb_coord)):
 #     lat1, lon1 = comb_coord[i]
 #     for j in range(len(comb_coord)):
@@ -438,153 +369,170 @@ print(len(optimal_coord))
 #     dist_mat.append(row)
 #     row =[]
 
-# int_coord = []
-# q = 0
-# co = []
-# e = 0
-# # print(x_range)
-# for list in rest_area_list:
-#     # print(list)
-#     equation_res = equation_of_line(list)
-#     i = 0    
-#     comb_coord = comb
-#     for m in range(len(dist_mat)):
-#         equation_hub = equation_of_line_from_point(comb_coord)
-#         inf = float('inf')
-#         c = 0
-#         d = 0
-#         k = 0
-#         j = m + 1
-#         for eq in equation_hub:
-#             m1, b1 = eq
-#             i = 0
-#             for res in equation_res:
-#                 m2, b2 = res
-#                 x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
-#                 int_coord.append((x_intersect, y_intersect))
-#                 if m == 7:
-#                     co.append((x_intersect, y_intersect))
-#                 # print(x_intersect, y_intersect, m, j, i,k,c,d)
-#                 (lat, lon) = comb[m]
-#                 # dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
-#                 if i != len(x_range[q]) - 1 :  # and 
-#                     if ((x_intersect > x_range[q][i] and x_intersect < x_range[q][i+1]) or (x_intersect < x_range[q][i] and x_intersect > x_range[q][i+1])) and dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
-#                         dist_mat[m][j] = inf
-#                         dist_mat[j][m] = inf
-#                         # if m == 0 and j == 7 and e == 0 and dist_mat[m][j] == inf:
-#                         #     co.append((x_intersect, y_intersect))   
-#                         #     e += 1                 
-#                         # print(dist_mat, x_intersect, y_intersect, m, j)
-#                         c += 1
-#                         break    
-#                     else:
-#                         k += 1
-#                         # print(dist_mat, k)
-#                 else:
-#                     if ((x_intersect > x_range[q][i] and x_intersect < x_range[q][0]) or (x_intersect < x_range[q][i] and x_intersect > x_range[q][0])) and dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
-#                         dist_mat[m][j] = inf
-#                         dist_mat[j][m] = inf
-#                         # if  m == 0 and j == 7 and e == 0 and dist_mat[m][j] == inf:
-#                         #     co.append((x_intersect, y_intersect))
-#                         #     e += 1
-#                         # print(dist_mat, x_intersect, y_intersect, m, j)
-#                         d += 1
-#                         break
+# print(dist_mat)
+rest_area_polygon = [item for sublist in rest_area_polygon for item in sublist]
+
+# Generate random coordinates
+
+lower_bound = 22
+upper_bound = 31.65
+lat = random.uniform(lower_bound, upper_bound)
+
+lower_bound = 25
+upper_bound = 36.9
+lon = random.uniform(lower_bound, upper_bound)
+
+start_coord = (lat, lon)
+start = [(lat, lon)]
+print(start)
+row = []
+dist_mat = []
+comb = start + optimal_coord + rest_area_polygon
+comb_coord = start + optimal_coord + rest_area_polygon
+# print(comb)
+# print(rest_area_list)
+for i in range(len(comb_coord)):
+    lat1, lon1 = comb_coord[i]
+    for j in range(len(comb_coord)):
+        lat2, lon2 = comb_coord[j]
+        row.append(haversine(lat1, lon1, lat2, lon2))
+    
+    dist_mat.append(row)
+    row =[]
+
+int_coord = []
+q = 0
+co = []
+e = 0
+# print(x_range)
+for list in rest_area_list:
+    # print(list)
+    equation_res = equation_of_line(list)
+    i = 0    
+    comb_coord = comb
+    for m in range(len(dist_mat)):
+        equation_hub = equation_of_line_from_point(comb_coord)
+        inf = float('inf')
+        c = 0
+        d = 0
+        k = 0
+        j = m + 1
+        for eq in equation_hub:
+            m1, b1 = eq
+            i = 0
+            for res in equation_res:
+                m2, b2 = res
+                x_intersect, y_intersect = find_intersection(m1, b1, m2, b2)
+                int_coord.append((x_intersect, y_intersect))
+                if m == 7:
+                    co.append((x_intersect, y_intersect))
+                # print(x_intersect, y_intersect, m, j, i,k,c,d)
+                (lat, lon) = comb[m]
+                # dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
+                if i != len(x_range[q]) - 1 :  # and 
+                    if ((x_intersect > x_range[q][i] and x_intersect < x_range[q][i+1]) or (x_intersect < x_range[q][i] and x_intersect > x_range[q][i+1])) and dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
+                        dist_mat[m][j] = inf
+                        dist_mat[j][m] = inf
+                        # if m == 0 and j == 7 and e == 0 and dist_mat[m][j] == inf:
+                        #     co.append((x_intersect, y_intersect))   
+                        #     e += 1                 
+                        # print(dist_mat, x_intersect, y_intersect, m, j)
+                        c += 1
+                        break    
+                    else:
+                        k += 1
+                        # print(dist_mat, k)
+                else:
+                    if ((x_intersect > x_range[q][i] and x_intersect < x_range[q][0]) or (x_intersect < x_range[q][i] and x_intersect > x_range[q][0])) and dist_mat[m][j] >= haversine(lat,lon,x_intersect,y_intersect):
+                        dist_mat[m][j] = inf
+                        dist_mat[j][m] = inf
+                        # if  m == 0 and j == 7 and e == 0 and dist_mat[m][j] == inf:
+                        #     co.append((x_intersect, y_intersect))
+                        #     e += 1
+                        # print(dist_mat, x_intersect, y_intersect, m, j)
+                        d += 1
+                        break
                         
-#                     else:
-#                         k += 1
-#                         # print(dist_mat, k)
-#                 # print(x_intersect, y_intersect, m, j, i,k,c,d)
-#                 i += 1
-#         # print(dist_mat)
-#             j += 1  
-#         comb_coord = comb_coord[1:]     
-#         # print(comb_coord)
-#         # comb_coord = comb_coord[::-1]
+                    else:
+                        k += 1
+                        # print(dist_mat, k)
+                # print(x_intersect, y_intersect, m, j, i,k,c,d)
+                i += 1
+        # print(dist_mat)
+            j += 1  
+        comb_coord = comb_coord[1:]     
+        # print(comb_coord)
+        # comb_coord = comb_coord[::-1]
 
-#         # print(dist_mat)
-#     q += 1
-# folium.Marker(location=start_coord, popup=f"Start").add_to(my_map_sol)
-# hubs_number = len(optimal_coord)
-# print(optimal_coord, hubs_number)
-# ind = [i for i in range(0,hubs_number)]
-# shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
+        # print(dist_mat)
+    q += 1
+folium.Marker(location=start_coord, popup=f"Start").add_to(my_map_sol)
+hubs_number = len(optimal_coord)
+ind = [i for i in range(0,hubs_number)]
+shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
     
-# # print(shortest_distance, previous_vertex,comb)
-# # i = 0
-# # # print(co)
-# # for coord in comb:
-# #     # custom_icon = folium.Icon(color='gray', icon='map-marker')
-# #     folium.Marker(location=coord, popup=f"{i}").add_to(my_map_sol)
-# #     i += 1
-# # my_map_sol.save("optimal_solution.html")
+# print(shortest_distance, previous_vertex,comb)
+i = 0
+# print(co)
+# for coord in co:
+#     # custom_icon = folium.Icon(color='gray', icon='map-marker')
+#     folium.Marker(location=coord, popup=f"{i}").add_to(my_map_sol)
+#     i += 1
+# my_map_sol.save("optimal_solution.html")
 
-# # Getting ALL Routes
+# Getting ALL Routes
 
-# # for i in range(1,hubs_number+1):
-# #     route = []
-# #     while i != 0 and is_number(i):
-# #         route.append(i)
-# #         i = previous_vertex[i]
-# #     shortest_route =  [0] + route[::-1]
-# #     # print(shortest_route)
-
-# #     route_coordinates = []  
-# #     for i in shortest_route:
-# #         route_coordinates.append(comb[i])
-# #     # print(route_coordinates)  
-# #     folium.PolyLine(locations=route_coordinates, color='blue').add_to(my_map_sol)
-
-
-# # Getting closest N hubs
-    
-# shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
-# shortest_distance = shortest_distance[:hubs_number] 
-# print(shortest_distance)
-# route_coordinates = [] 
-
-# avail_para = [availability_parameter[i] for i in indices]
-# avail_para = [ x / 10 + 1 for x in avail_para]
-# shortest_dist_avail = shortest_distance[:-N_hubs] * avail_para[:-N_hubs]
-# emergency = 'Yes'
-# if emergency == 'Yes':
-#     shortest_dist_avail = shortest_dist_avail.tolist()
-# else:
-#     shortest_dist_avail = shortest_distance.tolist()
-
-# i = 0
-# N = 5
-# shortest_ind = []
-# for i in range(N):
-#     dist = min(shortest_dist_avail[1:])
-#     min_ind = shortest_dist_avail.index(dist)
-#     shortest_ind.append(min_ind)
-#     shortest_dist_avail[min_ind] = inf
-#     print(shortest_distance[min_ind], avail_para[min_ind],dist, min_ind)
-
-# # shortest_ind = [item for sublist in shortest_ind for item in sublist]
-# print(shortest_ind)
-# k = 0
-# for i in shortest_ind:
-#     print(i)
+# for i in range(1,hubs_number+1):
 #     route = []
 #     while i != 0 and is_number(i):
 #         route.append(i)
 #         i = previous_vertex[i]
 #     shortest_route =  [0] + route[::-1]
-#     print(shortest_route)
+#     # print(shortest_route)
 
 #     route_coordinates = []  
 #     for i in shortest_route:
 #         route_coordinates.append(comb[i])
-#     print(route_coordinates)  
+#     # print(route_coordinates)  
 #     folium.PolyLine(locations=route_coordinates, color='blue').add_to(my_map_sol)
-#     if k == 0:
-#         folium.PolyLine(locations=route_coordinates, color='red').add_to(my_map_sol)
-#     k += 1
-# my_map_sol.save("optimal_solution.html")
 
-# print(availability_parameter, indices, avail_para[:-N_hubs],shortest_dist_avail)
 
-# shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
+# Getting closest N hubs
+    
+shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
+route_coordinates = [] 
+N = 5
+shortest_ind = []
+for i in range(N):
+    dist = min(shortest_distance[1:hubs_number])
+    min_ind = [index for index, value in enumerate(shortest_distance) if value == dist]
+    shortest_ind.append(min_ind)
+    shortest_distance[min_ind] = inf
+    print(dist, min_ind)
 
+shortest_ind = [item for sublist in shortest_ind for item in sublist]
+print(shortest_ind)
+
+for i in shortest_ind:
+    print(i)
+    route = []
+    while i != 0 and is_number(i):
+        route.append(i)
+        i = previous_vertex[i]
+    shortest_route =  [0] + route[::-1]
+    print(shortest_route)
+
+    route_coordinates = []  
+    for i in shortest_route:
+        route_coordinates.append(comb[i])
+    print(route_coordinates)  
+    folium.PolyLine(locations=route_coordinates, color='blue').add_to(my_map_sol)
+
+shortest_distance, previous_vertex, shortest_dist, shortest_route = dijkastra(dist_mat,hubs_number)
+
+route_coordinates = []  
+for i in shortest_route:
+    route_coordinates.append(comb[i])
+
+folium.PolyLine(locations=route_coordinates, color='red').add_to(my_map_sol)
+my_map_sol.save("optimal_solution.html")
